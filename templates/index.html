@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stock Tracker</title>
+</head>
+<body>
+    <h2>Stock Portfolio</h2>
+
+    <input id="symbol" placeholder="Symbol">
+    <input id="qty" placeholder="Quantity">
+    <button onclick="addStock()">Add</button>
+
+    <ul id="list"></ul>
+
+    <button onclick="calculate()">Calculate</button>
+
+    <pre id="result"></pre>
+    <div id="chart"></div>
+
+<script>
+let portfolio = [];
+
+function addStock() {
+    let symbol = document.getElementById("symbol").value.toUpperCase();
+    let qty = parseInt(document.getElementById("qty").value);
+
+    if (!symbol || isNaN(qty)) {
+        alert("Please enter valid data");
+        return;
+    }
+
+    portfolio.push({symbol: symbol, quantity: qty});
+showChart(symbol);  // 👈 ADDED
+
+    let li = document.createElement("li");
+    li.textContent = symbol + " - " + qty;
+    document.getElementById("list").appendChild(li);
+
+    document.getElementById("symbol").value = "";
+    document.getElementById("qty").value = "";
+}
+
+
+async function calculate() {
+    try {
+        let res = await fetch("/calculate", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(portfolio)
+        });
+
+        let data = await res.json();
+
+        // ✅ FIXED PART
+        let output = "";
+
+        data.stocks.forEach(stock => {
+            output += `${stock.symbol}: ${stock.quantity} × $${stock.price} = $${stock.value}\n`;
+        });
+
+        output += `\nTotal: $${data.total}`;
+
+        document.getElementById("result").textContent = output;
+
+    } catch (error) {
+        alert("Error connecting to server");
+    }
+}
+
+function showChart(symbol) {
+    document.getElementById("chart").innerHTML =
+        `<iframe
+            src="https://s.tradingview.com/widgetembed/?symbol=${symbol}&interval=D&theme=light" 
+            width="100%"
+            height="400"
+            frameborder="0">
+        </iframe>`;
+}
+</script>
+
+</body>
+</html>
