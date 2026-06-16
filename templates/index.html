@@ -28,17 +28,43 @@
             color: white;
             margin-bottom: 40px;
             animation: slideDown 0.5s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            flex: 1;
         }
 
         header p {
             font-size: 1.1em;
             opacity: 0.9;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .header-btn:hover {
+            background: white;
+            color: #667eea;
         }
 
         .main-content {
@@ -302,9 +328,76 @@
             animation: fadeIn 0.3s ease;
         }
 
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .save-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #d4edda;
+            color: #155724;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: none;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 15px;
             }
 
             header h1 {
@@ -317,6 +410,15 @@
 
             .button-group {
                 flex-direction: column;
+            }
+
+            .header-buttons {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .header-btn {
+                width: 100%;
             }
         }
 
@@ -355,8 +457,14 @@
 <body>
     <div class="container">
         <header>
-            <h1>📈 Stock Portfolio Tracker</h1>
-            <p>Track and analyze your stock investments</p>
+            <div>
+                <h1>📈 Stock Portfolio Tracker</h1>
+                <p>Track and analyze your stock investments</p>
+            </div>
+            <div class="header-buttons">
+                <button class="header-btn" onclick="openLoadModal()">📂 Load Portfolio</button>
+                <button class="header-btn" onclick="clearPortfolio()">🗑️ Clear All</button>
+            </div>
         </header>
 
         <div class="main-content">
@@ -412,8 +520,74 @@
         </div>
     </div>
 
+    <!-- Load Portfolio Modal -->
+    <div id="loadModal" class="modal">
+        <div class="modal-content">
+            <h2>📂 Load Saved Portfolio</h2>
+            <div id="portfolioList" style="max-height: 300px; overflow-y: auto;"></div>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="closeLoadModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Portfolio Modal -->
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <h2>💾 Save Portfolio</h2>
+            <div class="input-group">
+                <label for="portfolioName">Portfolio Name</label>
+                <input 
+                    type="text" 
+                    id="portfolioName" 
+                    placeholder="e.g., My Tech Stocks, Retirement"
+                    autocomplete="off"
+                >
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="closeSaveModal()">Cancel</button>
+                <button class="btn-primary" onclick="savePortfolio()">💾 Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Status Notification -->
+    <div class="save-status" id="saveStatus">✓ Portfolio saved!</div>
+
     <script>
         let portfolio = [];
+        const STORAGE_KEY = "stockPortfolios";
+        const AUTO_SAVE_KEY = "autoSavePortfolio";
+
+        // Load portfolio on page load
+        function initializeApp() {
+            loadAutoSavedPortfolio();
+            displayPortfolio();
+        }
+
+        // Auto-save portfolio to localStorage whenever it changes
+        function autoSavePortfolio() {
+            localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(portfolio));
+            showSaveStatus();
+        }
+
+        // Load auto-saved portfolio
+        function loadAutoSavedPortfolio() {
+            const saved = localStorage.getItem(AUTO_SAVE_KEY);
+            if (saved) {
+                portfolio = JSON.parse(saved);
+                displayPortfolio();
+            }
+        }
+
+        // Show save status notification
+        function showSaveStatus() {
+            const status = document.getElementById("saveStatus");
+            status.style.display = "block";
+            setTimeout(() => {
+                status.style.display = "none";
+            }, 2000);
+        }
 
         function addStock() {
             let symbol = document.getElementById("symbol").value.toUpperCase().trim();
@@ -442,27 +616,9 @@
 
             portfolio.push({ symbol: symbol, quantity: qty });
             successMsg.style.display = "block";
+            autoSavePortfolio(); // Auto-save to localStorage
             showChart(symbol);
-
-            // Create list item
-            let li = document.createElement("li");
-            li.setAttribute("data-symbol", symbol);
-            
-            let stockInfo = document.createElement("div");
-            stockInfo.className = "stock-info";
-            stockInfo.innerHTML = `
-                <span class="stock-symbol">${symbol}</span>
-                <span class="stock-qty">${qty} share${qty > 1 ? 's' : ''}</span>
-            `;
-            
-            let removeBtn = document.createElement("button");
-            removeBtn.className = "btn-remove";
-            removeBtn.textContent = "❌ Remove";
-            removeBtn.onclick = () => removeStock(symbol);
-
-            li.appendChild(stockInfo);
-            li.appendChild(removeBtn);
-            document.getElementById("list").appendChild(li);
+            displayPortfolio();
 
             // Clear inputs
             document.getElementById("symbol").value = "";
@@ -473,13 +629,45 @@
             emptyState.style.display = "none";
         }
 
+        function displayPortfolio() {
+            const list = document.getElementById("list");
+            const emptyState = document.getElementById("emptyState");
+            list.innerHTML = "";
+
+            if (portfolio.length === 0) {
+                emptyState.style.display = "block";
+                return;
+            }
+
+            emptyState.style.display = "none";
+
+            portfolio.forEach((stock, index) => {
+                let li = document.createElement("li");
+                li.setAttribute("data-symbol", stock.symbol);
+                li.setAttribute("data-index", index);
+                
+                let stockInfo = document.createElement("div");
+                stockInfo.className = "stock-info";
+                stockInfo.innerHTML = `
+                    <span class="stock-symbol">${stock.symbol}</span>
+                    <span class="stock-qty">${stock.quantity} share${stock.quantity > 1 ? 's' : ''}</span>
+                `;
+                
+                let removeBtn = document.createElement("button");
+                removeBtn.className = "btn-remove";
+                removeBtn.textContent = "❌ Remove";
+                removeBtn.onclick = () => removeStock(stock.symbol);
+
+                li.appendChild(stockInfo);
+                li.appendChild(removeBtn);
+                list.appendChild(li);
+            });
+        }
+
         function removeStock(symbol) {
             portfolio = portfolio.filter(stock => stock.symbol !== symbol);
-            let li = document.querySelector(`li[data-symbol="${symbol}"]`);
-            if (li) {
-                li.style.animation = "slideIn 0.3s ease reverse";
-                setTimeout(() => li.remove(), 300);
-            }
+            autoSavePortfolio(); // Auto-save after removal
+            displayPortfolio();
 
             // Show empty state if no stocks
             if (portfolio.length === 0) {
@@ -534,6 +722,9 @@
                         <span>Total Portfolio Value:</span>
                         <span class="total-value">$${parseFloat(data.total).toFixed(2)}</span>
                     </div>
+                    <div style="margin-top: 15px;">
+                        <button class="header-btn" style="width: 100%;" onclick="openSaveModal()">💾 Save This Portfolio</button>
+                    </div>
                 `;
 
                 resultDiv.innerHTML = output;
@@ -561,13 +752,144 @@
             `;
         }
 
+        // Save Portfolio Functions
+        function openSaveModal() {
+            document.getElementById("saveModal").style.display = "flex";
+            document.getElementById("portfolioName").focus();
+        }
+
+        function closeSaveModal() {
+            document.getElementById("saveModal").style.display = "none";
+        }
+
+        function savePortfolio() {
+            const name = document.getElementById("portfolioName").value.trim();
+
+            if (!name) {
+                alert("Please enter a portfolio name");
+                return;
+            }
+
+            let portfolios = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+            
+            // Check for duplicate names
+            const exists = portfolios.some(p => p.name === name);
+            if (exists) {
+                const overwrite = confirm(`Portfolio "${name}" already exists. Overwrite it?`);
+                if (!overwrite) return;
+                portfolios = portfolios.filter(p => p.name !== name);
+            }
+
+            portfolios.push({
+                name: name,
+                stocks: JSON.parse(JSON.stringify(portfolio)),
+                savedAt: new Date().toLocaleString()
+            });
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(portfolios));
+            closeSaveModal();
+            document.getElementById("portfolioName").value = "";
+            showSaveStatus();
+            alert(`✓ Portfolio "${name}" saved successfully!`);
+        }
+
+        // Load Portfolio Functions
+        function openLoadModal() {
+            const modal = document.getElementById("loadModal");
+            const portfolioList = document.getElementById("portfolioList");
+            let portfolios = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+            if (portfolios.length === 0) {
+                portfolioList.innerHTML = '<p style="text-align: center; color: #999;">No saved portfolios yet.</p>';
+            } else {
+                portfolioList.innerHTML = portfolios.map((p, index) => `
+                    <div style="
+                        background: #f8f9fa;
+                        padding: 15px;
+                        margin-bottom: 10px;
+                        border-radius: 8px;
+                        border-left: 4px solid #667eea;
+                    ">
+                        <div style="font-weight: 700; color: #333; margin-bottom: 5px;">${p.name}</div>
+                        <div style="color: #999; font-size: 0.9em; margin-bottom: 10px;">Saved: ${p.savedAt}</div>
+                        <div style="color: #666; font-size: 0.9em; margin-bottom: 10px;">${p.stocks.length} stock${p.stocks.length !== 1 ? 's' : ''}</div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="header-btn" style="flex: 1;" onclick="loadPortfolio(${index})">📂 Load</button>
+                            <button class="header-btn" style="flex: 1; background: #ff6b6b; border-color: #ff6b6b;" onclick="deletePortfolio(${index})">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `).join("");
+            }
+
+            modal.style.display = "flex";
+        }
+
+        function closeLoadModal() {
+            document.getElementById("loadModal").style.display = "none";
+        }
+
+        function loadPortfolio(index) {
+            let portfolios = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+            if (index >= 0 && index < portfolios.length) {
+                portfolio = JSON.parse(JSON.stringify(portfolios[index].stocks));
+                autoSavePortfolio();
+                displayPortfolio();
+                closeLoadModal();
+                alert(`✓ Portfolio "${portfolios[index].name}" loaded!`);
+            }
+        }
+
+        function deletePortfolio(index) {
+            let portfolios = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+            if (index >= 0 && index < portfolios.length) {
+                const name = portfolios[index].name;
+                if (confirm(`Delete portfolio "${name}"?`)) {
+                    portfolios.splice(index, 1);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(portfolios));
+                    openLoadModal(); // Refresh modal
+                    alert(`✓ Portfolio "${name}" deleted!`);
+                }
+            }
+        }
+
+        function clearPortfolio() {
+            if (portfolio.length === 0) {
+                alert("Portfolio is already empty!");
+                return;
+            }
+
+            if (confirm("Are you sure you want to clear your current portfolio? (You can save it first)")) {
+                portfolio = [];
+                autoSavePortfolio();
+                displayPortfolio();
+                document.getElementById("result").style.display = "none";
+                document.getElementById("chart").innerHTML = "";
+                alert("✓ Portfolio cleared!");
+            }
+        }
+
         // Enter key support
         document.addEventListener("DOMContentLoaded", function() {
+            initializeApp();
+
             document.getElementById("qty").addEventListener("keypress", function(e) {
                 if (e.key === "Enter") addStock();
             });
+
             document.getElementById("symbol").addEventListener("keypress", function(e) {
                 if (e.key === "Enter") document.getElementById("qty").focus();
+            });
+
+            document.getElementById("portfolioName").addEventListener("keypress", function(e) {
+                if (e.key === "Enter") savePortfolio();
+            });
+
+            // Close modals when clicking outside
+            window.addEventListener("click", function(e) {
+                let loadModal = document.getElementById("loadModal");
+                let saveModal = document.getElementById("saveModal");
+                if (e.target === loadModal) closeLoadModal();
+                if (e.target === saveModal) closeSaveModal();
             });
         });
     </script>
