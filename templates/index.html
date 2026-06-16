@@ -1,82 +1,575 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Stock Tracker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Portfolio Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: slideDown 0.5s ease;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            animation: fadeIn 0.6s ease;
+        }
+
+        .input-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-calculate {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            margin-top: 30px;
+        }
+
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-remove {
+            background: #ff6b6b;
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.85em;
+            margin-left: auto;
+        }
+
+        .btn-remove:hover {
+            background: #ff5252;
+        }
+
+        .portfolio-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 250px;
+        }
+
+        .portfolio-list h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        #list {
+            list-style: none;
+        }
+
+        #list li {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            animation: slideIn 0.3s ease;
+        }
+
+        .stock-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stock-symbol {
+            font-weight: 700;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .stock-qty {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 3px;
+        }
+
+        .results-section {
+            grid-column: 1 / -1;
+        }
+
+        .results-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        #result {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 150px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 1.05em;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .symbol-col {
+            font-weight: 600;
+            color: #667eea;
+            min-width: 80px;
+        }
+
+        .qty-col {
+            color: #666;
+        }
+
+        .price-col {
+            color: #666;
+        }
+
+        .value-col {
+            font-weight: 700;
+            color: #f5576c;
+            text-align: right;
+            min-width: 120px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            margin-top: 15px;
+            border-top: 2px solid #667eea;
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .total-value {
+            color: #f5576c;
+        }
+
+        #chart {
+            margin-top: 30px;
+        }
+
+        #chart iframe {
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2em;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
 </head>
 <body>
-    <h2>Stock Portfolio</h2>
+    <div class="container">
+        <header>
+            <h1>📈 Stock Portfolio Tracker</h1>
+            <p>Track and analyze your stock investments</p>
+        </header>
 
-    <input id="symbol" placeholder="Symbol">
-    <input id="qty" placeholder="Quantity">
-    <button onclick="addStock()">Add</button>
+        <div class="main-content">
+            <!-- Input Section -->
+            <div class="card input-section">
+                <h2>Add Stock</h2>
+                
+                <div class="input-group">
+                    <label for="symbol">Stock Symbol</label>
+                    <input 
+                        type="text" 
+                        id="symbol" 
+                        placeholder="e.g., AAPL, GOOGL, MSFT"
+                        autocomplete="off"
+                    >
+                </div>
 
-    <ul id="list"></ul>
+                <div class="input-group">
+                    <label for="qty">Quantity</label>
+                    <input 
+                        type="number" 
+                        id="qty" 
+                        placeholder="e.g., 10"
+                        min="1"
+                        autocomplete="off"
+                    >
+                </div>
 
-    <button onclick="calculate()">Calculate</button>
+                <div class="button-group">
+                    <button class="btn-add" onclick="addStock()">➕ Add Stock</button>
+                </div>
 
-    <pre id="result"></pre>
-    <div id="chart"></div>
+                <div class="success-message" id="successMsg">✓ Stock added successfully!</div>
+                <div class="error-message" id="errorMsg">✗ Please enter valid data</div>
+            </div>
 
-<script>
-let portfolio = [];
+            <!-- Portfolio List Section -->
+            <div class="card">
+                <div class="portfolio-list">
+                    <h3>Your Portfolio</h3>
+                    <ul id="list"></ul>
+                    <div class="empty-state" id="emptyState">Your portfolio is empty. Add a stock to get started!</div>
+                </div>
+            </div>
 
-function addStock() {
-    let symbol = document.getElementById("symbol").value.toUpperCase();
-    let qty = parseInt(document.getElementById("qty").value);
+            <!-- Results Section -->
+            <div class="card results-section">
+                <h2>Portfolio Summary</h2>
+                <button class="btn-calculate" onclick="calculate()">💰 Calculate Portfolio Value</button>
+                <div id="result" style="display: none;"></div>
+                <div id="chart"></div>
+            </div>
+        </div>
+    </div>
 
-    if (!symbol || isNaN(qty)) {
-        alert("Please enter valid data");
-        return;
-    }
+    <script>
+        let portfolio = [];
 
-    portfolio.push({symbol: symbol, quantity: qty});
-showChart(symbol);  // 👈 ADDED
+        function addStock() {
+            let symbol = document.getElementById("symbol").value.toUpperCase().trim();
+            let qty = parseInt(document.getElementById("qty").value);
+            let successMsg = document.getElementById("successMsg");
+            let errorMsg = document.getElementById("errorMsg");
+            let emptyState = document.getElementById("emptyState");
 
-    let li = document.createElement("li");
-    li.textContent = symbol + " - " + qty;
-    document.getElementById("list").appendChild(li);
+            // Reset messages
+            successMsg.style.display = "none";
+            errorMsg.style.display = "none";
 
-    document.getElementById("symbol").value = "";
-    document.getElementById("qty").value = "";
-}
+            if (!symbol || isNaN(qty) || qty <= 0) {
+                errorMsg.style.display = "block";
+                errorMsg.textContent = "✗ Please enter a valid symbol and positive quantity";
+                return;
+            }
 
+            // Check for duplicates
+            let isDuplicate = portfolio.some(stock => stock.symbol === symbol);
+            if (isDuplicate) {
+                errorMsg.style.display = "block";
+                errorMsg.textContent = "✗ This stock is already in your portfolio!";
+                return;
+            }
 
-async function calculate() {
-    try {
-        let res = await fetch("/calculate", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(portfolio)
+            portfolio.push({ symbol: symbol, quantity: qty });
+            successMsg.style.display = "block";
+            showChart(symbol);
+
+            // Create list item
+            let li = document.createElement("li");
+            li.setAttribute("data-symbol", symbol);
+            
+            let stockInfo = document.createElement("div");
+            stockInfo.className = "stock-info";
+            stockInfo.innerHTML = `
+                <span class="stock-symbol">${symbol}</span>
+                <span class="stock-qty">${qty} share${qty > 1 ? 's' : ''}</span>
+            `;
+            
+            let removeBtn = document.createElement("button");
+            removeBtn.className = "btn-remove";
+            removeBtn.textContent = "❌ Remove";
+            removeBtn.onclick = () => removeStock(symbol);
+
+            li.appendChild(stockInfo);
+            li.appendChild(removeBtn);
+            document.getElementById("list").appendChild(li);
+
+            // Clear inputs
+            document.getElementById("symbol").value = "";
+            document.getElementById("qty").value = "";
+            document.getElementById("symbol").focus();
+
+            // Hide empty state
+            emptyState.style.display = "none";
+        }
+
+        function removeStock(symbol) {
+            portfolio = portfolio.filter(stock => stock.symbol !== symbol);
+            let li = document.querySelector(`li[data-symbol="${symbol}"]`);
+            if (li) {
+                li.style.animation = "slideIn 0.3s ease reverse";
+                setTimeout(() => li.remove(), 300);
+            }
+
+            // Show empty state if no stocks
+            if (portfolio.length === 0) {
+                document.getElementById("emptyState").style.display = "block";
+                document.getElementById("result").style.display = "none";
+                document.getElementById("chart").innerHTML = "";
+            }
+        }
+
+        async function calculate() {
+            if (portfolio.length === 0) {
+                alert("Please add at least one stock to your portfolio!");
+                return;
+            }
+
+            let calculateBtn = event.target;
+            calculateBtn.textContent = "⏳ Calculating...";
+            calculateBtn.disabled = true;
+
+            try {
+                let res = await fetch("/calculate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(portfolio)
+                });
+
+                if (!res.ok) {
+                    throw new Error("Failed to fetch data");
+                }
+
+                let data = await res.json();
+
+                // Format result as a nice table
+                let resultDiv = document.getElementById("result");
+                let output = '<div style="margin-bottom: 15px;">';
+                
+                data.stocks.forEach((stock, index) => {
+                    const price = parseFloat(stock.price).toFixed(2);
+                    const value = parseFloat(stock.value).toFixed(2);
+                    output += `
+                        <div class="result-item">
+                            <span class="symbol-col">${stock.symbol}</span>
+                            <span class="qty-col">${stock.quantity} × $${price}</span>
+                            <span class="value-col">$${value}</span>
+                        </div>
+                    `;
+                });
+
+                output += '</div>';
+                output += `
+                    <div class="total-row">
+                        <span>Total Portfolio Value:</span>
+                        <span class="total-value">$${parseFloat(data.total).toFixed(2)}</span>
+                    </div>
+                `;
+
+                resultDiv.innerHTML = output;
+                resultDiv.style.display = "block";
+
+            } catch (error) {
+                console.error("Error:", error);
+                alert("❌ Error connecting to server. Please try again.");
+            } finally {
+                calculateBtn.textContent = "💰 Calculate Portfolio Value";
+                calculateBtn.disabled = false;
+            }
+        }
+
+        function showChart(symbol) {
+            document.getElementById("chart").innerHTML = `
+                <h3 style="color: #333; margin-bottom: 15px;">📊 ${symbol} Price Chart</h3>
+                <iframe
+                    src="https://s.tradingview.com/widgetembed/?symbol=${symbol}&interval=D&theme=light" 
+                    width="100%"
+                    height="400"
+                    frameborder="0"
+                    style="border-radius: 10px;">
+                </iframe>
+            `;
+        }
+
+        // Enter key support
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("qty").addEventListener("keypress", function(e) {
+                if (e.key === "Enter") addStock();
+            });
+            document.getElementById("symbol").addEventListener("keypress", function(e) {
+                if (e.key === "Enter") document.getElementById("qty").focus();
+            });
         });
-
-        let data = await res.json();
-
-        // ✅ FIXED PART
-        let output = "";
-
-        data.stocks.forEach(stock => {
-            output += `${stock.symbol}: ${stock.quantity} × $${stock.price} = $${stock.value}\n`;
-        });
-
-        output += `\nTotal: $${data.total}`;
-
-        document.getElementById("result").textContent = output;
-
-    } catch (error) {
-        alert("Error connecting to server");
-    }
-}
-
-function showChart(symbol) {
-    document.getElementById("chart").innerHTML =
-        `<iframe
-            src="https://s.tradingview.com/widgetembed/?symbol=${symbol}&interval=D&theme=light" 
-            width="100%"
-            height="400"
-            frameborder="0">
-        </iframe>`;
-}
-</script>
-
+    </script>
 </body>
 </html>
