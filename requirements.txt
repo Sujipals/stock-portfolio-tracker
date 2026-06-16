@@ -1,3 +1,4 @@
 Flask==2.3.3
 yfinance==0.2.32
 Werkzeug==2.3.7
+flask-cors==4.0.0
