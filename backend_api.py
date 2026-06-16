@@ -1,7 +1,11 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import yfinance as yf
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
+
+@app.route("/")
+def home():
+    return render_template("index.html")
 
 @app.route("/portfolio", methods=["POST"])
 def portfolio():
@@ -28,6 +32,11 @@ def portfolio():
         })
 
     return jsonify({"stocks": result, "total": total})
+
+@app.route("/calculate", methods=["POST"])
+def calculate():
+    """Alias for /portfolio endpoint to match frontend calls"""
+    return portfolio()
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
