@@ -4,18 +4,32 @@ import yfinance as yf
 import logging
 
 app = Flask(__name__, template_folder='templates')
-CORS(app)
+
+# Enable CORS with specific configuration for Vercel
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def home():
-    return render_template("index.html")
+    """Serve the home page"""
+    try:
+        return render_template("index.html")
+    except Exception as e:
+        logger.error(f"Error serving home page: {str(e)}")
+        return jsonify({"error": "Could not load home page"}), 500
 
 @app.route("/portfolio", methods=["POST"])
 def portfolio():
+    """Calculate portfolio value"""
     try:
         data = request.json
         
@@ -35,6 +49,8 @@ def portfolio():
                     errors.append(f"Invalid symbol or quantity")
                     continue
 
+                logger.info(f"Fetching data for {symbol}...")
+                
                 # Fetch stock data
                 stock = yf.Ticker(symbol)
                 price = stock.info.get("regularMarketPrice")
@@ -47,15 +63,17 @@ def portfolio():
                     price = 0
                     logger.warning(f"Could not fetch price for {symbol}")
 
-                value = price * qty
+                value = float(price) * float(qty)
                 total += value
 
                 result.append({
                     "symbol": symbol,
-                    "price": price,
-                    "quantity": qty,
-                    "value": value
+                    "price": float(price),
+                    "quantity": int(qty),
+                    "value": float(value)
                 })
+                
+                logger.info(f"Successfully fetched {symbol}: ${price}")
 
             except Exception as e:
                 error_msg = f"Error fetching {item.get('symbol', 'Unknown')}: {str(e)}"
@@ -64,36 +82,50 @@ def portfolio():
                 continue
 
         if len(result) == 0:
-            return jsonify({"error": "Could not fetch data for any stocks"}), 400
+            return jsonify({"error": "Could not fetch data for any stocks", "details": errors}), 400
 
-        return jsonify({
+        response = {
             "stocks": result,
-            "total": total,
-            "errors": errors
-        })
+            "total": float(total)
+        }
+        
+        if errors:
+            response["errors"] = errors
+
+        logger.info(f"Portfolio calculation successful. Total: ${total}")
+        return jsonify(response), 200
 
     except Exception as e:
-        logger.error(f"Portfolio calculation error: {str(e)}")
+        logger.error(f"Portfolio calculation error: {str(e)}", exc_info=True)
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
-@app.route("/calculate", methods=["POST"])
+@app.route("/calculate", methods=["POST", "OPTIONS"])
 def calculate():
     """Alias for /portfolio endpoint to match frontend calls"""
+    if request.method == "OPTIONS":
+        return "", 204
     return portfolio()
 
 @app.route("/health", methods=["GET"])
 def health():
     """Health check endpoint"""
-    return jsonify({"status": "ok"}), 200
+    return jsonify({"status": "ok", "message": "Server is running"}), 200
 
 @app.errorhandler(404)
 def not_found(error):
+    logger.warning(f"404 error: {str(error)}")
     return jsonify({"error": "Endpoint not found"}), 404
 
 @app.errorhandler(500)
 def server_error(error):
-    logger.error(f"Server error: {str(error)}")
+    logger.error(f"500 error: {str(error)}")
     return jsonify({"error": "Internal server error"}), 500
+
+# Handle CORS preflight requests
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        return "", 204
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
